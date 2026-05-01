@@ -13,7 +13,8 @@ public class CharacterControl : MonoBehaviour
     public float _gravity = 9.5f;
     public float _terminalSpeed = 50f;
     public float _jumpForce = 5f;
-    
+
+    public Vector3 prevVelocity;
     public Vector3 velocity;
     
     [Space]
@@ -28,7 +29,7 @@ public class CharacterControl : MonoBehaviour
     // Add references your states will need here, e.g.:
     public Rigidbody _rb { get; private set; }
     public CapsuleCollider _collider { get; private set; }
-    //   public Animator    Anim { get; private set; }
+    public Animator Anim { get; private set; }
 
     // ── Internal ─────────────────────────────────────────────────────────────
     private ICharacterState _currentState;
@@ -43,7 +44,7 @@ public class CharacterControl : MonoBehaviour
         // Cache any component references here, e.g.:
         _rb = GetComponent<Rigidbody>();
         _collider = GetComponent<CapsuleCollider>();
-        //   Anim = GetComponent<Animator>();
+        Anim = GetComponent<Animator>();
     }
 
     private void Start()
@@ -59,7 +60,6 @@ public class CharacterControl : MonoBehaviour
 
     public void Jump()
     {
-        Debug.Log("Jumping");
         velocity += -(_gravityDirection) * _jumpForce;
         TransitionTo(Airborne);
     }
@@ -129,11 +129,27 @@ public class CharacterControl : MonoBehaviour
 
     public void GroundMovementLogic()
     {
+        if (velocity.magnitude > 0 && prevVelocity.magnitude == 0)
+        {
+            Anim.CrossFade("Running", .1f);
+        }
+        else if (velocity.magnitude == 0 && prevVelocity.magnitude > 0)
+        {
+            Anim.CrossFade("Idle", .1f);
+        }
+        
+        prevVelocity = velocity;
+        
         if (InputManager.Instance.InputDir == Vector3.zero)
         {
-            velocity += -velocity.normalized * (moveDeceleration * Time.deltaTime);
-            transform.position += velocity * Time.deltaTime;
-
+            if (velocity.magnitude > 0.1f)
+            {
+                velocity += -velocity.normalized * (moveDeceleration * Time.deltaTime);
+                transform.position += velocity * Time.deltaTime;
+            }
+            else
+                velocity = Vector3.zero;
+            
             return;
         }
         

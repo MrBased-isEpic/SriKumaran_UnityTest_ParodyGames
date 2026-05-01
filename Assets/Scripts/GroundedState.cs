@@ -18,6 +18,15 @@ public class GroundedState : ICharacterState
         control._rb.isKinematic = false;
         
         InputManager.Instance.OnJumpPressed += control.Jump;
+        
+        if (control.velocity.magnitude > 0)
+        {
+            control.Anim.CrossFade("Running", .1f);
+        }
+        else if (control.velocity.magnitude == 0)
+        {
+            control.Anim.CrossFade("Idle", .1f);
+        }
     }
 
     public void Update(CharacterControl control)

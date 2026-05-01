@@ -11,6 +11,8 @@ public class AirborneState : ICharacterState
         control._rb.isKinematic = true;
 
         InputManager.Instance.OnJumpPressed -= control.Jump;
+        
+        control.Anim.CrossFade("Falling Idle", .1f);
     }
 
     public void Update(CharacterControl control)
@@ -33,7 +35,6 @@ public class AirborneState : ICharacterState
         {
             Debug.Log(dot);
             control.TransitionTo(control.Grounded);
-            Debug.Log("OnCollisionEnter: " + collision.gameObject.name);
         }
         
     }
