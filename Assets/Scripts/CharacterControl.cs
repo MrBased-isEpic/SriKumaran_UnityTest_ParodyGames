@@ -64,6 +64,110 @@ public class CharacterControl : MonoBehaviour
         TransitionTo(Airborne);
     }
 
+    public Quaternion GetMoveDirection()
+    {
+        // Get vector showing which way camera is looking in 2D
+        Vector3 cameraFaceForward = Camera.main.transform.forward;
+        cameraFaceForward.y = 0;
+        cameraFaceForward.Normalize();
+        
+        // Convert forwards into Quaternions and extract the angles
+        Quaternion inputRotation = Quaternion.LookRotation(InputManager.Instance.InputDir,
+            -_gravityDirection);
+
+        Quaternion cameraRotation = Quaternion.LookRotation(cameraFaceForward,
+            -_gravityDirection);
+        
+        float inputAngle = inputRotation.eulerAngles.y;
+        float cameraAngle = cameraRotation.eulerAngles.y;
+        
+        // Calculate the final rotation by adding the input to camera angle
+        Quaternion finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
+            AddAngle(cameraAngle, inputAngle),
+            cameraRotation.eulerAngles.z);
+        
+        return finalRotation;
+    }
+    
+    public void AirMovementLogic()
+    {
+        Vector3 lateralMovement = velocity;
+        lateralMovement.y = 0;
+        
+        if (InputManager.Instance.InputDir == Vector3.zero)
+        {
+            velocity += -lateralMovement * (moveDeceleration * Time.deltaTime);
+            transform.position += velocity * Time.deltaTime;
+            return;
+        }
+
+        // Make Character face said direction
+        transform.rotation = Quaternion.Lerp(transform.rotation, 
+            GetMoveDirection(),
+            Time.deltaTime * 10f);
+        
+
+        // Increase Velocity
+        if (lateralMovement.magnitude < moveSpeed)
+        {
+            velocity += transform.forward * (moveAcceleration * Time.deltaTime);
+        }
+        else
+        {
+            Vector3 forward = transform.forward;
+            forward.y = 0;
+            forward.Normalize();
+
+            velocity.x = 0;
+            velocity.z = 0;
+            
+            velocity += forward * moveSpeed;
+        }
+        
+        transform.position += velocity * Time.deltaTime;
+    }
+
+    public void GroundMovementLogic()
+    {
+        if (InputManager.Instance.InputDir == Vector3.zero)
+        {
+            velocity += -velocity.normalized * (moveDeceleration * Time.deltaTime);
+            transform.position += velocity * Time.deltaTime;
+
+            return;
+        }
+        
+        // Make Character face said direction
+        transform.rotation = Quaternion.Lerp(transform.rotation, 
+            GetMoveDirection(),
+            Time.deltaTime * 10f);
+
+        // Increase Velocity
+        if (velocity.magnitude < moveSpeed)
+        {
+            velocity += transform.forward * (moveAcceleration * Time.deltaTime);
+        }
+        else
+        {
+            velocity = transform.forward * moveSpeed;
+        }
+        
+        transform.position += velocity * Time.deltaTime;
+    }
+    
+    float AddAngle(float a, float b)
+    {
+        float added = a + b;
+        if (added > 360)
+        {
+            return added - 360;
+        }
+        else
+        {
+            return added;
+        }
+    }
+
     private void OnTriggerEnter(Collider collision)
     {
         _currentState?.OnTriggerEnter(collision, this);

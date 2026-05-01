@@ -17,17 +17,17 @@ public class AirborneState : ICharacterState
     {
         control.velocity += control._gravityDirection * (control._gravity * Time.deltaTime);
 
-        if (control.velocity.magnitude > control._terminalSpeed)
+        if (Mathf.Abs(control.velocity.y) > control._terminalSpeed)
         {
             control.velocity = control.velocity.normalized * control._terminalSpeed;
         }
-
-        control.transform.position += control.velocity * Time.deltaTime;
-        //Debug.Log("Velocity: " + control.velocity);
+        
+        control.AirMovementLogic();
     }
 
     void ICharacterState.OnTriggerEnter(Collider collision, CharacterControl control)
     {
+        // Making sure it's a floor and not a "Wall" before stopping your fall.
         float dot = Vector3.Dot(collision.transform.up, control._gravityDirection);
         if (dot == -1 || dot == 1)
         {
