@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,10 +16,15 @@ public class InputManager : MonoBehaviour
     
     #endregion
     
+    #region Events
+
+    public Action OnJumpPressed;
+    
+    #endregion 
+    
     #region Properties
 
     public Vector2 MouseDelta => _mouseDelta;
-    
     public bool isMouseLocked => !Cursor.visible;
 
     #endregion
@@ -63,5 +69,10 @@ public class InputManager : MonoBehaviour
         // {
         //     ToggleMouseLock();
         // }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            OnJumpPressed?.Invoke();
+        }
     }
 }

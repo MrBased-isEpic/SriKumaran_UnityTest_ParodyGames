@@ -1,8 +1,13 @@
+using UnityEngine;
+
 /// <summary>
 /// Base interface for all character movement states.
 /// </summary>
 public interface ICharacterState
 {
-    void Setup(CharacterStateMachine stateMachine);
-    void Update(CharacterStateMachine stateMachine);
+    
+    
+    void Setup(CharacterControl control);
+    void Update(CharacterControl control);
+    void OnCollisionEnter(Collider collision, CharacterControl control);
 }
