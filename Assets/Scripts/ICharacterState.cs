@@ -9,5 +9,5 @@ public interface ICharacterState
     
     void Setup(CharacterControl control);
     void Update(CharacterControl control);
-    void OnCollisionEnter(Collider collision, CharacterControl control);
+    void OnTriggerEnter(Collider collision, CharacterControl control);
 }

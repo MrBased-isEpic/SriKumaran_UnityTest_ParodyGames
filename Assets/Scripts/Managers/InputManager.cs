@@ -25,6 +25,15 @@ public class InputManager : MonoBehaviour
     #region Properties
 
     public Vector2 MouseDelta => _mouseDelta;
+    public Vector3 InputDir
+    {
+        get
+        {
+            _inputDir.Normalize();
+            return new Vector3(_inputDir.normalized.x, 0,_inputDir.normalized.y);
+        }
+    }
+
     public bool isMouseLocked => !Cursor.visible;
 
     #endregion
@@ -59,16 +68,12 @@ public class InputManager : MonoBehaviour
     
     
     private Vector2 _mouseDelta;
+    private Vector2 _inputDir;
 
     private void Update()
     {
-        // _mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        // //Debug.Log(_mouseDelta);
-        //
-        // if (Input.GetKeyDown(KeyCode.A))
-        // {
-        //     ToggleMouseLock();
-        // }
+        _inputDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        //Debug.Log(_inputDir);
 
         if (Input.GetKeyDown(KeyCode.Space))
         {

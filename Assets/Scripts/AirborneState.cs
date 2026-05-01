@@ -26,9 +26,15 @@ public class AirborneState : ICharacterState
         //Debug.Log("Velocity: " + control.velocity);
     }
 
-    void ICharacterState.OnCollisionEnter(Collider collision, CharacterControl control)
+    void ICharacterState.OnTriggerEnter(Collider collision, CharacterControl control)
     {
-        //Debug.Log("OnCollisionEnter: " + collision.gameObject.name);
-        control.TransitionTo(control.Grounded);
+        float dot = Vector3.Dot(collision.transform.up, control._gravityDirection);
+        if (dot == -1 || dot == 1)
+        {
+            Debug.Log(dot);
+            control.TransitionTo(control.Grounded);
+            Debug.Log("OnCollisionEnter: " + collision.gameObject.name);
+        }
+        
     }
 }

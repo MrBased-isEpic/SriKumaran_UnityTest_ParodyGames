@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -14,6 +15,13 @@ public class CharacterControl : MonoBehaviour
     public float _jumpForce = 5f;
     
     public Vector3 velocity;
+    
+    [Space]
+    [Header("Movement Settings")]
+    public float moveAcceleration = 5f;
+    public float moveDeceleration = 5f;
+    public float moveSpeed = 5f;
+    
     
     
     // ── Shared state the machine exposes to all states ──────────────────────
@@ -52,13 +60,13 @@ public class CharacterControl : MonoBehaviour
     public void Jump()
     {
         Debug.Log("Jumping");
-        velocity = -(_gravityDirection) * _jumpForce;
+        velocity += -(_gravityDirection) * _jumpForce;
         TransitionTo(Airborne);
     }
 
     private void OnTriggerEnter(Collider collision)
     {
-        _currentState?.OnCollisionEnter(collision, this);
+        _currentState?.OnTriggerEnter(collision, this);
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
