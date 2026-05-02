@@ -36,6 +36,8 @@ public class AirborneState : ICharacterState
             control.gameObject.SetActive(false);
             return;
         }
+
+        if (!collision.CompareTag("Ground")) return;
         
         // Making sure it's a floor and not a "Wall" before stopping your fall.
         float dot = Vector3.Dot(collision.transform.up, control._gravityDirection);
