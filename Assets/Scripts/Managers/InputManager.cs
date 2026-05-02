@@ -19,6 +19,8 @@ public class InputManager : MonoBehaviour
     #region Events
 
     public Action OnJumpPressed;
+
+    public Action OnGravityPressed;
     
     public Action OnArrowStart;
     public Action OnArrowUpdate;
@@ -102,5 +104,11 @@ public class InputManager : MonoBehaviour
         {
             OnJumpPressed?.Invoke();
         }
+        
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            OnGravityPressed?.Invoke();
+        }
+        
     }
 }

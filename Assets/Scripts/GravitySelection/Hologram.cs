@@ -6,6 +6,8 @@ public class Hologram : MonoBehaviour
 {
     [SerializeField] private Transform localRotator;
     [SerializeField] private Transform hologramTransform;
+    
+    [SerializeField] private CharacterControl _control;
 
     private Vector3[] _axes = {
         new (0,0,-1),
@@ -23,20 +25,20 @@ public class Hologram : MonoBehaviour
         InputManager.Instance.OnArrowStart += OnArrowStarted;
         InputManager.Instance.OnArrowEnd += OnArrowEnded;
         InputManager.Instance.OnArrowUpdate += OnArrowUpdate;
+        
+        InputManager.Instance.OnGravityPressed += OnGravityPressed;
     }
 
     // Update is called once per frame
     void Update()
     {
         Vector3 forward = GetClosestCameraForwardAxis();
-        transform.rotation = Quaternion.LookRotation(forward, transform.up);
+        transform.rotation = Quaternion.LookRotation(forward, -_control._gravityDirection);
 
         if (!localRotator.gameObject.activeSelf) return;
         
-        
-        
         localRotator.localRotation = Quaternion.Lerp(localRotator.localRotation,
-            _targetRotation, Time.deltaTime * 10);
+            _targetRotation, Time.deltaTime * 20);
     }
     
     Quaternion _targetRotation = Quaternion.identity;
@@ -64,6 +66,12 @@ public class Hologram : MonoBehaviour
         {
             _targetRotation = Quaternion.Euler(-90 * input.y,0,0);
         }
+    }
+    
+    private void OnGravityPressed()
+    {
+        Vector3 gravityDirection = (hologramTransform.position - transform.position).normalized;
+        _control.ChangeGravity(gravityDirection, hologramTransform);
     }
 
     Vector3 GetClosestCameraForwardAxis()

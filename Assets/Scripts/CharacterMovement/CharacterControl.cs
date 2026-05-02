@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -70,6 +71,26 @@ public class CharacterControl : MonoBehaviour
         TransitionTo(Airborne);
     }
 
+    Coroutine gravityChangeCoroutine;
+    
+    public void ChangeGravity(Vector3 gravityDirection, Transform newPosition)
+    {
+        if (gravityChangeCoroutine != null) return;
+
+        gravityChangeCoroutine = StartCoroutine(ChangeGravityRoutine(gravityDirection, newPosition));
+    }
+
+    private IEnumerator ChangeGravityRoutine(Vector3 gravityDirection, Transform newPosition)
+    {
+        _collider.enabled = false;
+        yield return Animations.LerpTransform(this.transform, newPosition, .2f);
+        yield return Animations.RotateTransform(_cameraFollow, newPosition.rotation, .2f);
+        _gravityDirection = gravityDirection;
+        TransitionTo(Airborne);
+        _collider.enabled = true;
+        gravityChangeCoroutine = null;
+    }
+
     public void CalculateGravityAxis()
     {
         igravityAxisFilter = new Vector3(Mathf.Abs(_gravityDirection.x),
@@ -110,31 +131,31 @@ public class CharacterControl : MonoBehaviour
         {
             inputAngle = inputRotation.eulerAngles.x;
             cameraAngle = cameraRotation.eulerAngles.x;
-            finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
-                cameraRotation.eulerAngles.y,
-                cameraRotation.eulerAngles.z);
+             finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
+                 cameraRotation.eulerAngles.y,
+                 cameraRotation.eulerAngles.z);
         }
         else if (Mathf.Abs(_gravityDirection.y) == 1)
         {
             inputAngle = inputRotation.eulerAngles.y;
             cameraAngle = cameraRotation.eulerAngles.y;
-            finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
-                AddAngle(cameraAngle, inputAngle),
-                cameraRotation.eulerAngles.z);
+             finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
+                 AddAngle(cameraAngle, inputAngle),
+                 cameraRotation.eulerAngles.z);
         }
         else
         {
             //Debug.Log("Calculating z axis");
             inputAngle = inputRotation.eulerAngles.x;
             cameraAngle = cameraRotation.eulerAngles.x;
-            finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
-                cameraRotation.eulerAngles.y,
-                cameraRotation.eulerAngles.z);
+            // finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
+            //     cameraRotation.eulerAngles.y,
+            //     cameraRotation.eulerAngles.z);
             // inputAngle = inputRotation.eulerAngles.z;
             // cameraAngle = cameraRotation.eulerAngles.z;
-            // finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
-            //     cameraRotation.eulerAngles.y,
-            //     AddAngle(cameraAngle, inputAngle));
+             finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
+                 cameraRotation.eulerAngles.y,
+                 AddAngle(cameraAngle, inputAngle));
         }
 
         debugRot.rotation = finalRotation;
