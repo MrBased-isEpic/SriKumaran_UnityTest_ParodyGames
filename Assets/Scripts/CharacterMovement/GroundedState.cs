@@ -31,6 +31,7 @@ public class GroundedState : ICharacterState
 
     public void Update(CharacterControl control)
     {
+        control.CalculateGravityAxis();
         control.GroundMovementLogic();
     }
     

@@ -17,6 +17,8 @@ public class AirborneState : ICharacterState
 
     public void Update(CharacterControl control)
     {
+        control.CalculateGravityAxis();
+        
         control.velocity += control._gravityDirection * (control._gravity * Time.deltaTime);
 
         if (Mathf.Abs(control.velocity.y) > control._terminalSpeed)
@@ -31,9 +33,9 @@ public class AirborneState : ICharacterState
     {
         // Making sure it's a floor and not a "Wall" before stopping your fall.
         float dot = Vector3.Dot(collision.transform.up, control._gravityDirection);
-        if (dot == -1 || dot == 1)
+        
+        if (Mathf.Approximately(dot, 1) || Mathf.Approximately(dot, -1))
         {
-            Debug.Log(dot);
             control.TransitionTo(control.Grounded);
         }
         

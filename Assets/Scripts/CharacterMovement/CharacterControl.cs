@@ -7,12 +7,17 @@ using UnityEngine;
 /// </summary>
 public class CharacterControl : MonoBehaviour
 {
+    [SerializeField] private Transform _cameraFollow;
+    [SerializeField] private Transform debugRot;
     
     [Header("Gravity Settings")]
     public Vector3 _gravityDirection = Vector3.down;
     public float _gravity = 9.5f;
     public float _terminalSpeed = 50f;
     public float _jumpForce = 5f;
+
+    public Vector3 gravityAxisFilter;
+    private Vector3 igravityAxisFilter;
 
     public Vector3 prevVelocity;
     public Vector3 velocity;
@@ -56,6 +61,7 @@ public class CharacterControl : MonoBehaviour
     private void Update()
     {
         _currentState?.Update(this);
+        _cameraFollow.position = transform.position; 
     }
 
     public void Jump()
@@ -64,12 +70,26 @@ public class CharacterControl : MonoBehaviour
         TransitionTo(Airborne);
     }
 
+    public void CalculateGravityAxis()
+    {
+        igravityAxisFilter = new Vector3(Mathf.Abs(_gravityDirection.x),
+            Mathf.Abs(_gravityDirection.y),
+            Mathf.Abs(_gravityDirection.z));
+        
+        gravityAxisFilter.x = igravityAxisFilter.x == 0 ? 1 : 0;
+        gravityAxisFilter.y = igravityAxisFilter.y == 0 ? 1 : 0;
+        gravityAxisFilter.z = igravityAxisFilter.z == 0 ? 1 : 0;
+    }
+
     public Quaternion GetMoveDirection()
     {
+        //Debug.Log($"Gravity Axis: {cameraAxisFilter}");
+        
         // Get vector showing which way camera is looking in 2D
         Vector3 cameraFaceForward = Camera.main.transform.forward;
-        cameraFaceForward.y = 0;
-        cameraFaceForward.Normalize();
+        cameraFaceForward = Vector3.Scale(cameraFaceForward, gravityAxisFilter).normalized;
+        
+        //Debug.Log($"Camera Face: {cameraFaceForward}");
         
         // Convert forwards into Quaternions and extract the angles
         Quaternion inputRotation = Quaternion.LookRotation(InputManager.Instance.InputDir,
@@ -78,21 +98,54 @@ public class CharacterControl : MonoBehaviour
         Quaternion cameraRotation = Quaternion.LookRotation(cameraFaceForward,
             -_gravityDirection);
         
-        float inputAngle = inputRotation.eulerAngles.y;
-        float cameraAngle = cameraRotation.eulerAngles.y;
+        //Debug.Log($"Camera Rotation: {cameraRotation.eulerAngles}");
+
+        float inputAngle = 0;
+        float cameraAngle = 0;
+        Quaternion finalRotation = Quaternion.Euler(0,0,0);
+        
         
         // Calculate the final rotation by adding the input to camera angle
-        Quaternion finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
-            AddAngle(cameraAngle, inputAngle),
-            cameraRotation.eulerAngles.z);
+        if (Mathf.Abs(_gravityDirection.x) == 1)
+        {
+            inputAngle = inputRotation.eulerAngles.x;
+            cameraAngle = cameraRotation.eulerAngles.x;
+            finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
+                cameraRotation.eulerAngles.y,
+                cameraRotation.eulerAngles.z);
+        }
+        else if (Mathf.Abs(_gravityDirection.y) == 1)
+        {
+            inputAngle = inputRotation.eulerAngles.y;
+            cameraAngle = cameraRotation.eulerAngles.y;
+            finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
+                AddAngle(cameraAngle, inputAngle),
+                cameraRotation.eulerAngles.z);
+        }
+        else
+        {
+            //Debug.Log("Calculating z axis");
+            inputAngle = inputRotation.eulerAngles.x;
+            cameraAngle = cameraRotation.eulerAngles.x;
+            finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
+                cameraRotation.eulerAngles.y,
+                cameraRotation.eulerAngles.z);
+            // inputAngle = inputRotation.eulerAngles.z;
+            // cameraAngle = cameraRotation.eulerAngles.z;
+            // finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
+            //     cameraRotation.eulerAngles.y,
+            //     AddAngle(cameraAngle, inputAngle));
+        }
+
+        debugRot.rotation = finalRotation;
+        //Debug.Log($"Final Rotation : {finalRotation.eulerAngles}");
         
         return finalRotation;
     }
     
     public void AirMovementLogic()
     {
-        Vector3 lateralMovement = velocity;
-        lateralMovement.y = 0;
+        Vector3 lateralMovement = Vector3.Scale(velocity, gravityAxisFilter);
         
         if (InputManager.Instance.InputDir == Vector3.zero)
         {
@@ -114,12 +167,9 @@ public class CharacterControl : MonoBehaviour
         }
         else
         {
-            Vector3 forward = transform.forward;
-            forward.y = 0;
-            forward.Normalize();
+            Vector3 forward = Vector3.Scale(transform.forward, gravityAxisFilter).normalized;
 
-            velocity.x = 0;
-            velocity.z = 0;
+            velocity = Vector3.Scale(velocity, igravityAxisFilter);
             
             velocity += forward * moveSpeed;
         }

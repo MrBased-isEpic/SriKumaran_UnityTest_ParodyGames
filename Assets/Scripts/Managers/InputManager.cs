@@ -20,6 +20,10 @@ public class InputManager : MonoBehaviour
 
     public Action OnJumpPressed;
     
+    public Action OnArrowStart;
+    public Action OnArrowUpdate;
+    public Action OnArrowEnd;
+    
     #endregion 
     
     #region Properties
@@ -30,9 +34,10 @@ public class InputManager : MonoBehaviour
         get
         {
             _inputDir.Normalize();
-            return new Vector3(_inputDir.normalized.x, 0,_inputDir.normalized.y);
+            return new Vector3(_inputDir.x, 0, _inputDir.y);
         }
     }
+    public Vector2 ArrowDir => _arrowDir;
 
     public bool isMouseLocked => !Cursor.visible;
 
@@ -69,11 +74,29 @@ public class InputManager : MonoBehaviour
     
     private Vector2 _mouseDelta;
     private Vector2 _inputDir;
+    private Vector2 _arrowDir;
+    private Vector2 _prevArrowDir;
 
     private void Update()
     {
         _inputDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        //Debug.Log(_inputDir);
+        _arrowDir = new Vector2(Input.GetAxisRaw("HArrow"), Input.GetAxisRaw("VArrow"));
+
+        if (_arrowDir != Vector2.zero && _prevArrowDir == Vector2.zero)
+        {
+            OnArrowStart?.Invoke();
+        }
+        else if (_arrowDir == Vector2.zero && _prevArrowDir != Vector2.zero)
+        {
+            OnArrowEnd?.Invoke();
+        }
+        else if(_arrowDir != _prevArrowDir)
+        {
+            OnArrowUpdate?.Invoke();
+        }
+        
+        _prevArrowDir = _arrowDir;
+        //Debug.Log(_arrowDir);
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
