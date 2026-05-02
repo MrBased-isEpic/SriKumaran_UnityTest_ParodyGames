@@ -31,6 +31,12 @@ public class AirborneState : ICharacterState
 
     void ICharacterState.OnTriggerEnter(Collider collision, CharacterControl control)
     {
+        if (collision.CompareTag("Respawn"))
+        {
+            control.gameObject.SetActive(false);
+            return;
+        }
+        
         // Making sure it's a floor and not a "Wall" before stopping your fall.
         float dot = Vector3.Dot(collision.transform.up, control._gravityDirection);
         

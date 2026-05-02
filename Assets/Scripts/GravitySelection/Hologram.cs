@@ -38,7 +38,7 @@ public class Hologram : MonoBehaviour
         if (!localRotator.gameObject.activeSelf) return;
         
         localRotator.localRotation = Quaternion.Lerp(localRotator.localRotation,
-            _targetRotation, Time.deltaTime * 20);
+            _targetRotation, Time.deltaTime * 10);
     }
     
     Quaternion _targetRotation = Quaternion.identity;
@@ -70,6 +70,7 @@ public class Hologram : MonoBehaviour
     
     private void OnGravityPressed()
     {
+        localRotator.localRotation = _targetRotation;
         Vector3 gravityDirection = (hologramTransform.position - transform.position).normalized;
         _control.ChangeGravity(gravityDirection, hologramTransform);
     }

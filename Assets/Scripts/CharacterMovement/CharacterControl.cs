@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -10,6 +11,7 @@ public class CharacterControl : MonoBehaviour
 {
     [SerializeField] private Transform _cameraFollow;
     [SerializeField] private Transform debugRot;
+    [SerializeField] private Transform inputRotTransform;
     
     [Header("Gravity Settings")]
     public Vector3 _gravityDirection = Vector3.down;
@@ -87,8 +89,10 @@ public class CharacterControl : MonoBehaviour
         yield return Animations.RotateTransform(_cameraFollow, newPosition.rotation, .2f);
         _gravityDirection = gravityDirection;
         TransitionTo(Airborne);
-        _collider.enabled = true;
         gravityChangeCoroutine = null;
+
+        yield return new WaitForSeconds(.2f);
+        _collider.enabled = true;
     }
 
     public void CalculateGravityAxis()
@@ -97,69 +101,51 @@ public class CharacterControl : MonoBehaviour
             Mathf.Abs(_gravityDirection.y),
             Mathf.Abs(_gravityDirection.z));
         
-        gravityAxisFilter.x = igravityAxisFilter.x == 0 ? 1 : 0;
-        gravityAxisFilter.y = igravityAxisFilter.y == 0 ? 1 : 0;
-        gravityAxisFilter.z = igravityAxisFilter.z == 0 ? 1 : 0;
+        //Debug.Log($"igravityAxisFilter: {igravityAxisFilter}");
+        
+        gravityAxisFilter.x = igravityAxisFilter.x < 1 ? 1 : 0;
+        gravityAxisFilter.y = igravityAxisFilter.y < 1 ? 1 : 0;
+        gravityAxisFilter.z = igravityAxisFilter.z < 1 ? 1 : 0;
+        
+        
+        //Debug.Log($"gravityAxisFilter: {gravityAxisFilter}");
     }
 
     public Quaternion GetMoveDirection()
     {
-        //Debug.Log($"Gravity Axis: {cameraAxisFilter}");
         
         // Get vector showing which way camera is looking in 2D
         Vector3 cameraFaceForward = Camera.main.transform.forward;
-        cameraFaceForward = Vector3.Scale(cameraFaceForward, gravityAxisFilter).normalized;
         
         //Debug.Log($"Camera Face: {cameraFaceForward}");
+        //Debug.Log($"gravityAxisFilter: {gravityAxisFilter}");
+        
+        cameraFaceForward = Vector3.Scale(cameraFaceForward, gravityAxisFilter).normalized;
+        
         
         // Convert forwards into Quaternions and extract the angles
         Quaternion inputRotation = Quaternion.LookRotation(InputManager.Instance.InputDir,
-            -_gravityDirection);
+            Vector3.up);
 
-        Quaternion cameraRotation = Quaternion.LookRotation(cameraFaceForward,
-            -_gravityDirection);
+        Quaternion cameraRotation = Quaternion.LookRotation(cameraFaceForward, -_gravityDirection);
+
         
-        //Debug.Log($"Camera Rotation: {cameraRotation.eulerAngles}");
-
-        float inputAngle = 0;
+        float inputAngle = inputRotation.eulerAngles.y;
         float cameraAngle = 0;
-        Quaternion finalRotation = Quaternion.Euler(0,0,0);
+        Quaternion finalRotation = transform.rotation;
         
+        inputRotTransform.localRotation = Quaternion.Euler(0,
+            inputAngle, 
+            0);
         
-        // Calculate the final rotation by adding the input to camera angle
-        if (Mathf.Abs(_gravityDirection.x) == 1)
-        {
-            inputAngle = inputRotation.eulerAngles.x;
-            cameraAngle = cameraRotation.eulerAngles.x;
-             finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
-                 cameraRotation.eulerAngles.y,
-                 cameraRotation.eulerAngles.z);
-        }
-        else if (Mathf.Abs(_gravityDirection.y) == 1)
-        {
-            inputAngle = inputRotation.eulerAngles.y;
-            cameraAngle = cameraRotation.eulerAngles.y;
-             finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
-                 AddAngle(cameraAngle, inputAngle),
-                 cameraRotation.eulerAngles.z);
-        }
-        else
-        {
-            //Debug.Log("Calculating z axis");
-            inputAngle = inputRotation.eulerAngles.x;
-            cameraAngle = cameraRotation.eulerAngles.x;
-            // finalRotation = Quaternion.Euler(AddAngle(cameraAngle, inputAngle), 
-            //     cameraRotation.eulerAngles.y,
-            //     cameraRotation.eulerAngles.z);
-            // inputAngle = inputRotation.eulerAngles.z;
-            // cameraAngle = cameraRotation.eulerAngles.z;
-             finalRotation = Quaternion.Euler(cameraRotation.eulerAngles.x, 
-                 cameraRotation.eulerAngles.y,
-                 AddAngle(cameraAngle, inputAngle));
-        }
+        inputRotation = inputRotTransform.localRotation;
+        debugRot.rotation = inputRotation;
 
-        debugRot.rotation = finalRotation;
-        //Debug.Log($"Final Rotation : {finalRotation.eulerAngles}");
+        finalRotation = cameraRotation * inputRotation;
+        
+        //Debug.Log($"input angle = {inputAngle}");
+
+        // debugRot.rotation = finalRotation;
         
         return finalRotation;
     }
@@ -260,6 +246,11 @@ public class CharacterControl : MonoBehaviour
         _currentState?.OnTriggerEnter(collision, this);
     }
 
+    private void OnCollisionExit(Collision other)
+    {
+        TransitionTo(Airborne);
+    }
+
     // ── Public API ────────────────────────────────────────────────────────────
     /// <summary>
     /// Transitions the machine into <paramref name="nextState"/>,
@@ -267,6 +258,7 @@ public class CharacterControl : MonoBehaviour
     /// </summary>
     public void TransitionTo(ICharacterState nextState)
     {
+        if (_currentState == nextState) return;
         _currentState = nextState;
         _currentState.Setup(this);
     }
