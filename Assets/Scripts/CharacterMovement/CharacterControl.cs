@@ -30,8 +30,9 @@ public class CharacterControl : MonoBehaviour
     public float moveAcceleration = 5f;
     public float moveDeceleration = 5f;
     public float moveSpeed = 5f;
-    
-    
+
+    [SerializeField] private GameObject killScreen;
+    [SerializeField] private Timer timer;
     
     // ── Shared state the machine exposes to all states ──────────────────────
     // Add references your states will need here, e.g.:
@@ -71,6 +72,14 @@ public class CharacterControl : MonoBehaviour
     {
         velocity += -(_gravityDirection) * _jumpForce;
         TransitionTo(Airborne);
+    }
+
+    public void Kill()
+    {
+        gameObject.SetActive(false);
+        killScreen.gameObject.SetActive(true);
+        timer.StopTimer();
+        InputManager.Instance.ToggleMouseLock();
     }
 
     Coroutine gravityChangeCoroutine;
@@ -226,19 +235,6 @@ public class CharacterControl : MonoBehaviour
         }
         
         transform.position += velocity * Time.deltaTime;
-    }
-    
-    float AddAngle(float a, float b)
-    {
-        float added = a + b;
-        if (added > 360)
-        {
-            return added - 360;
-        }
-        else
-        {
-            return added;
-        }
     }
 
     private void OnTriggerEnter(Collider collision)

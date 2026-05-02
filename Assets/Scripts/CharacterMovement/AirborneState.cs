@@ -33,7 +33,7 @@ public class AirborneState : ICharacterState
     {
         if (collision.CompareTag("Respawn"))
         {
-            control.gameObject.SetActive(false);
+            control.Kill();
             return;
         }
 

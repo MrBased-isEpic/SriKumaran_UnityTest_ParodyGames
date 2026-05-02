@@ -6,6 +6,9 @@ public class PointManager : MonoBehaviour
 {
     private int noOfPoints;
     private int pointsEarned;
+    
+    [SerializeField] private GameObject winScreen;
+    [SerializeField] private Timer timer;
 
     private void Start()
     {
@@ -21,8 +24,9 @@ public class PointManager : MonoBehaviour
 
         if (pointsEarned == noOfPoints)
         {
-            Debug.Log("Won the game");
-            //win
+            winScreen.gameObject.SetActive(true);
+            InputManager.Instance.ToggleMouseLock();
+            timer.StopTimer();
         }
     }
 }
