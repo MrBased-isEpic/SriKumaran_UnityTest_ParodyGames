@@ -105,7 +105,7 @@ public class InputManager : MonoBehaviour
             OnJumpPressed?.Invoke();
         }
         
-        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             OnGravityPressed?.Invoke();
         }
